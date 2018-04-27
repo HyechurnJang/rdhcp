@@ -30,7 +30,7 @@ if __name__ == '__main__':
         os.system('ip netns exec %s route add default gw %s' % (low_name, desc['gateway']))
         
         os.system('ip netns exec %s iptables -t nat -A PREROUTING -i %s -d %s -j DNAT --to-destination 1.254.1.254' % (low_name, desc['interface'], desc['address']))
-        
+#         asdf
 #         os.system('ip netns exec %s iptables -t nat -A POSTROUTING -j MASQUERADE' % low_name)
 #         os.system('ip netns exec %s iptables -t nat -A PREROUTING -p tcp -i %s --dport 8080 -j DNAT --to 1.254.1.254:8080' % (low_name, desc['interface']))
 #         os.system('ip netns exec %s iptables -t nat -A PREROUTING -p tcp -i %s --dport 22 -j DNAT --to 1.254.1.254:22' % (low_name, desc['interface']))
