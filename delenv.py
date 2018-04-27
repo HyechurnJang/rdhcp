@@ -20,4 +20,5 @@ if __name__ == '__main__':
         os.system('ip link del %s0' % low_name)
         os.system('ip netns del %s' % low_name)
     
+    os.system('ifconfig rdhcp down')
     os.system('brctl delbr rdhcp')
