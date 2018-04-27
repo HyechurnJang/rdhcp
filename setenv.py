@@ -30,7 +30,7 @@ if __name__ == '__main__':
         print 5
         os.system('brctl addif rdhcp %s0' % low_name)
         print 6
-        os.system('ip link add %s netns %s' % (desc['interface'], low_name))
+        os.system('ip link set %s netns %s' % (desc['interface'], low_name))
         print 7
         os.system('ip netns exec %s ifconfig %s %s netmask %s up' % (low_name, desc['interface'], desc['address'], desc['netmask']))
         print 8
