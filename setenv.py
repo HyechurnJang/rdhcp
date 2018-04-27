@@ -28,7 +28,7 @@ if __name__ == '__main__':
         os.system('ip link set %s netns %s' % (desc['interface'], low_name))
         os.system('ip netns exec %s ifconfig %s %s netmask %s up' % (low_name, desc['interface'], desc['address'], desc['netmask']))
         os.system('ip netns exec %s route add default gw %s' % (low_name, desc['gateway']))
-        os.system('ip netns exec %s iptables -t nat -A POSTROUTING -j MASQUERADE' % low_name)
+#         os.system('ip netns exec %s iptables -t nat -A POSTROUTING -j MASQUERADE' % low_name)
         os.system('ip netns exec %s iptables -t nat -A PREROUTING -p tcp -i %s --dport 8080 -j DNAT --to 1.254.1.254:8080' % (low_name, desc['interface']))
         os.system('ip netns exec %s iptables -t nat -A PREROUTING -p tcp -i %s --dport 22 -j DNAT --to 1.254.1.254:22' % (low_name, desc['interface']))
         idx += 1
