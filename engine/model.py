@@ -9,31 +9,82 @@ from sql import *
 db = Sql(File())
 
 @model(db)
-class Net(Model):
+class Interface(Model):
     
+    name = String(32)
+    mac = String(24)
+    ip = String(16)
+    net = String(16)
+    mask = String(16)
+    cidr = String(24)
+    prefix = String(4)
+    ns = String(32)
+    
+    def __init__(self, name, mac, ip, net, mask, cidr, prefix):
+        self.name = name
+        self.mac = mac 
+        self.ip = ip
+        self.net = net
+        self.mask = mask
+        self.cidr = cidr
+        self.prefix = prefix
+        self.ns = ''
+    
+    def __repr__(self):
+        return 'Interface(%s, %s, %s, %s, %s, %s, %s, %s)' % (
+            self.name,
+            self.mac,
+            self.ip,
+            self.net,
+            self.mask,
+            self.cidr,
+            self.prefix,
+            self.ns
+        )
+    
+    def toDict(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'mac' : self.mac,
+            'ip' : self.ip,
+            'net' : self.net,
+            'mask' : self.mask,
+            'cidr' : self.cidr,
+            'prefix' : self.prefix,
+            'ns' : self.ns
+        }
+
+@model(db)
+class NameSpace(Model):
+    
+    name = String(32)
     intf = String(32)
-    network = String(16)
-    netmask = String(16)
+    net = String(16)
+    mask = String(16)
+    prefix = String(4)
     gateway = String(16)
     dhcp = String(16)
     dns = String(16)
     ntp = String(16)
     
-    def __init__(self, intf, network, netmask, gateway, dhcp, dns, ntp):
+    def __init__(self, name, intf, net, mask, gw, dhcp, dns, ntp):
+        self.name = name
         self.intf = intf
-        self.network = network
-        self.netmask = netmask
-        self.gateway = gateway
+        self.net = net
+        self.mask = mask
+        self.gw = gw
         self.dhcp = dhcp
         self.dns = dns
         self.ntp = ntp
     
     def __repr__(self):
-        return 'Net(%s, %s, %s, %s, %s, %s, %s)' % (
+        return 'Net(%s, %s, %s, %s, %s, %s, %s, %s)' % (
+            self.name,
             self.intf,
-            self.network,
-            self.netmask,
-            self.gateway,
+            self.net,
+            self.mask,
+            self.gw,
             self.dhcp,
             self.dns,
             self.ntp
@@ -42,10 +93,11 @@ class Net(Model):
     def toDict(self):
         return {
             'id' : self.id,
+            'name' : self.name,
             'intf' : self.intf,
-            'network' : self.network,
-            'netmask' : self.netmask,
-            'gateway' : self.gateway,
+            'net' : self.net,
+            'mask' : self.mask,
+            'gw' : self.gw,
             'dhcp' : self.dhcp,
             'dns' : self.dns,
             'ntp' : self.ntp
@@ -54,24 +106,22 @@ class Net(Model):
 @model(db)
 class Host(Model):
     
-    net_id = Integer()
-    intf = String(32)
+    ns = String(32)
     mac = String(24)
     ip = String(16)
     
-    def __init__(self, net_id, mac, ip):
-        self.net_id = net_id
+    def __init__(self, ns, mac, ip):
+        self.ns = ns
         self.mac = mac
         self.ip = ip
     
     def __repr__(self):
-        return 'Host(%s, %s, %s)' % (self.intf, self.mac, self.ip)
+        return 'Host(%s, %s, %s)' % (self.ns, self.mac, self.ip)
     
     def toDict(self):
         return {
             'id' : self.id,
-            'net_id' : self.net_id,
-            'intf' : self.intf,
+            'ns' : self.ns,
             'mac' : self.mac,
             'ip' : self.ip
         }
