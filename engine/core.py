@@ -30,6 +30,7 @@ class Controller:
     
     def syncInterface(self):
         self.if_list = interfaces()
+        self.if_list.remove('lo')
         for if_name in self.if_list:
             addrs = ifaddresses(if_name)
             try: mac = addrs[AF_LINK][0]['addr']
@@ -78,7 +79,7 @@ class Controller:
         
         intf.ip = ip
         intf.mask = mask
-        net_obj = ip_network('%s/%s' % (ip, mask), strict=False)
+        net_obj = ip_network(unicode('%s/%s' % (ip, mask)), strict=False)
         intf.net = net_obj.network_address
         intf.prefix = net_obj.prefixlen
         intf.cidr = '%s/%s' % (ip, intf.prefix)
