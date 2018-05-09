@@ -11,7 +11,7 @@ from ipaddress import ip_network
 from netifaces import interfaces, ifaddresses, AF_INET, AF_LINK
 from .model import Interface, NameSpace, Host
 
-DEBUG = True
+DEBUG = False
 
 class Controller:
     
