@@ -6,7 +6,8 @@ Created on 2018. 3. 30.
 
 from sql import *
 
-db = Sql(File())
+# db = Sql(File())
+db = Sql(Mysql('localhost', 'root', '1234Qwer', 'rdhcp'))
 
 @model(db)
 class Interface(Model):
