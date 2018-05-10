@@ -157,8 +157,15 @@ class NameSpace(Model):
             cli('brctl addif %s v%s' % (self.name, self.name))
             cli('brctl addif %s %s' % (self.name, self.if_name))
             cli('mkdir -p /opt/rdhcp/%s' % self.name)
-            cli('touch /opt/rdhcp/%s/dhcp' % self.name)
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
+            if self.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (self.mask, self.range) 
+            else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net)
+            if self.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (self.gw)
+            if self.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (self.dns)
+            if self.ntp != '': dhcp_file += 'dhcp-option=42,%s\n' % (self.ntp)
+            with open('/opt/rdhcp/%s/dhcp' % self.name, 'w') as fd: fd.write(dhcp_file)
+            cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name))
+            with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd: self.pid = int(fd.read())
         except Exception as e:
             self.__delete_namespace__()
             raise e
