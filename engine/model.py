@@ -244,13 +244,10 @@ class Host(Model):
         cli('ip netns exec %s kill -1 %d' % (ns.name, ns.pid))
         return self
     
-    def __repr__(self):
-        return 'Host(%s, %s, %s, %s)' % (self.name, self.ns, self.mac, self.ip)
-    
     def toDict(self):
         return {
             'id' : self.id,
-            'ns_id' : self.ns,
+            'ns_id' : self.ns_id,
             'mac' : self.mac,
             'ip' : self.ip,
             'name' : self.name
