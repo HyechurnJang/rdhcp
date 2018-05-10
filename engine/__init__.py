@@ -14,16 +14,16 @@ def sync_interfaces(request):
     except Exception as e: return {'error' : str(e)}
 
 @rest('GET', '/interface')
-def get_interface(request, intf=None):
+def get_interface(request, interface=None):
     try:
-        if intf: return controller.getInterface(intf)
+        if interface: return controller.getInterface(interface)
         else: return {'data' : controller.getInterfaces()}
     except Exception as e: return {'error' : str(e)}
 
 @rest('POST', '/interface')
 def set_interface(request):
     try:
-        if_p = request.data['intf']
+        if_p = request.data['interface']
         ip = request.data['ip']
         mask = request.data['mask']
     except Exception as e: return {'error' : str(e)}
@@ -34,9 +34,9 @@ def set_interface(request):
     return ret
 
 @rest('GET', '/namespace')
-def get_namespace(request, ns=None):
+def get_namespace(request, namespace=None):
     try:
-        if ns: return controller.getNameSpace(ns)
+        if namespace: return controller.getNameSpace(namespace)
         else: return {'data' : controller.getNameSpaces()}
     except Exception as e: return {'error' : str(e)}
 
@@ -44,7 +44,7 @@ def get_namespace(request, ns=None):
 def create_namespace(request):
     try:
         name = request.data['name']
-        if_p = request.data['intf']
+        if_p = request.data['interface']
     except Exception as e: return {'error' : str(e)}
     gw = request.data['gw'] if 'gw' in request.data else ''
     dns = request.data['dns'] if 'dns' in request.data else ''
@@ -56,24 +56,24 @@ def create_namespace(request):
     return ret
 
 @rest('DELETE', '/namespace')
-def delete_namespace(request, ns):
+def delete_namespace(request, namespace):
     lock.on()
-    try: ret = controller.deleteNameSpace(ns)
+    try: ret = controller.deleteNameSpace(namespace)
     except Exception as e: ret = {'error' : str(e)}
     lock.off()
     return ret
 
 @rest('GET', '/host')
-def get_host(request, h=None):
+def get_host(request, host=None):
     try:
-        if h: return controller.getHost(h)
+        if host: return controller.getHost(host)
         else: return {'data' : controller.getHosts()}
     except Exception as e: return {'error' : str(e)}
 
 @rest('POST', '/host')
 def create_host(request):
     try:
-        ns_p = request.data['ns']
+        ns_p = request.data['namespace']
         mac = request.data['mac']
         ip = request.data['ip']
     except Exception as e: return {'error' : str(e)}
@@ -85,9 +85,9 @@ def create_host(request):
     return ret
 
 @rest('DELETE', '/host')
-def delete_host(request, h):
+def delete_host(request, host):
     lock.on()
-    try: ret = controller.deleteHost(h)
+    try: ret = controller.deleteHost(host)
     except Exception as e: ret = {'error' : str(e)}
     lock.off()
     return ret

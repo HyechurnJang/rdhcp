@@ -143,7 +143,7 @@ class NameSpace(Model):
             cli('brctl addif %s v%s' % (self.name, self.name))
             cli('brctl addif %s %s' % (self.name, self.if_name))
             cli('mkdir -p /opt/rdhcp/%s' % self.name)
-            cli('touch /opt/rdhcp/%s/dhcp' % self.name)
+            with open('/opt/rdhcp/%s/dhcp' % self.name) as fd: fd.write('dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net))
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
             cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name))
             with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd: self.pid = int(fd.read())
@@ -218,9 +218,9 @@ class Host(Model):
             if host.name: hosts_file += '%s    %s\n' % (host.ip, host.name)
         dhcp_file += 'dhcp-host=%s,%s\n' % (self.mac, self.ip)
         if self.name: hosts_file += '%s    %s\n' % (self.ip, self.name)
-        with open('/opt/rdhcp/%s/dhcp', 'w') as fd: fd.write(dhcp_file)
+        with open('/opt/rdhcp/%s/dhcp' % ns.name, 'w') as fd: fd.write(dhcp_file)
         if hosts_file:
-            with open('/opt/rdhcp/%s/hosts', 'w') as fd: fd.write(hosts_file)
+            with open('/opt/rdhcp/%s/hosts' % ns.name, 'w') as fd: fd.write(hosts_file)
         cli('ip netns exec %s kill -1 %d' % (ns.name, ns.pid))
         return Model.create(self)
     
@@ -236,9 +236,9 @@ class Host(Model):
         for host in hosts:
             dhcp_file += 'dhcp-host=%s,%s\n' % (host.mac, host.ip)
             if host.name: hosts_file += '%s    %s\n' % (host.ip, host.name)
-        with open('/opt/rdhcp/%s/dhcp', 'w') as fd: fd.write(dhcp_file)
+        with open('/opt/rdhcp/%s/dhcp' % ns.name, 'w') as fd: fd.write(dhcp_file)
         if hosts_file:
-            with open('/opt/rdhcp/%s/hosts', 'w') as fd: fd.write(hosts_file)
+            with open('/opt/rdhcp/%s/hosts' % ns.name, 'w') as fd: fd.write(hosts_file)
         cli('ip netns exec %s kill -1 %d' % (ns.name, ns.pid))
         return self
     
