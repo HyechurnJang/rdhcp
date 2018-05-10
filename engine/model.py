@@ -145,19 +145,15 @@ class NameSpace(Model):
             cli('brctl addif %s v%s' % (self.name, self.name))
             cli('brctl addif %s %s' % (self.name, self.if_name))
             cli('mkdir -p /opt/rdhcp/%s' % self.name)
-            with open('/opt/rdhcp/%s/dhcp' % self.name, 'w') as fd:
-                fd.write('dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net))
+            cli('touch /opt/rdhcp/%s/dhcp' % self.name)
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
-            cli('ip netns exec %s /usr/sbin/dnsmasq --user=root --no-resolv --no-poll --no-hosts --interface=v%s --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name, self.name))
-            with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd:
-                self.pid = int(fd.read())
         except Exception as e:
             self.__delete_namespace__()
             raise e
         return Model.create(self)
     
     def __delete_namespace__(self):
-        cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
+        if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
         cli('ip netns del %s' % self.name, force=True)
         cli('ifconfig %s down' % self.name, force=True)
         cli('brctl delbr %s' % self.name, force=True)
@@ -225,7 +221,11 @@ class Host(Model):
         with open('/opt/rdhcp/%s/dhcp' % ns.name, 'w') as fd: fd.write(dhcp_file)
         if hosts_file:
             with open('/opt/rdhcp/%s/hosts' % ns.name, 'w') as fd: fd.write(hosts_file)
-        cli('ip netns exec %s kill -1 %d' % (ns.name, ns.pid))
+        if ns.pid: cli('ip netns exec %s kill -9 %d' % (ns.name, ns.pid), force=True)
+        cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (ns.name, ns.name, ns.name, ns.name, ns.name, ns.name))
+        with open('/opt/rdhcp/%s/pid' % ns.name, 'r') as fd:
+            ns.pid = int(fd.read())
+            ns.update()
         return Model.create(self)
     
     def delete(self):
@@ -243,7 +243,11 @@ class Host(Model):
         with open('/opt/rdhcp/%s/dhcp' % ns.name, 'w') as fd: fd.write(dhcp_file)
         if hosts_file:
             with open('/opt/rdhcp/%s/hosts' % ns.name, 'w') as fd: fd.write(hosts_file)
-        cli('ip netns exec %s kill -1 %d' % (ns.name, ns.pid))
+        if ns.pid: cli('ip netns exec %s kill -9 %d' % (ns.name, ns.pid), force=True)
+        cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (ns.name, ns.name, ns.name, ns.name, ns.name, ns.name))
+        with open('/opt/rdhcp/%s/pid' % ns.name, 'r') as fd:
+            ns.pid = int(fd.read())
+            ns.update()
         return self
     
     def toDict(self):
