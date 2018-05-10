@@ -15,6 +15,7 @@ class Controller:
     
     def __init__(self):
         os.system('mkdir -p /opt/rdhcp')
+        self.if_mgmt = os.environ.get('RDHCP_IF_MGMT', '')
         self.syncInterfaces()
     
     def checkIPFormat(self, ip):
@@ -31,13 +32,20 @@ class Controller:
     def syncInterfaces(self):
         if_list = interfaces()
         if_list.remove('lo')
-        # need to remove mgmt intf
+        if self.if_mgmt:
+            try: if_list.remove(self.if_mgmt)
+            except: pass
         for if_name in if_list:
             intf = Interface.one(Interface.name==if_name)
             if intf: intf.sync()
             else: Interface(if_name).create()
         for intf in Interface.list():
             if intf.name not in if_list: intf.delete()
+        return [intf.toDict() for intf in Interface.list()]
+    
+    def setIfMgmt(self, if_mgmt):
+        self.if_mgmt = if_mgmt
+        return self.syncInterfaces()
     
     def getInterfaces(self):
         return [intf.toDict() for intf in Interface.list()]
@@ -68,7 +76,13 @@ class Controller:
         if not ns: raise Exception('non-exist namespace')
         return ns.toDict()
     
-    def createNameSpace(self, name, if_p, gw='', dns='', ntp=''):
+    def createNameSpace(self, name, if_p, stt='', end='', gw='', dns='', ntp=''):
+        if stt and end:
+            if not self.checkIPFormat(stt): raise Exception('invalid stt string')
+            if not self.checkIPFormat(end): raise Exception('invalid end string')
+            range = '%s,%s' % (stt, end)
+        elif not stt and not end: range = ''
+        else: raise Exception('dhcp_start and dhcp_end always must be pair value')
         if gw and not self.checkIPFormat(gw): raise Exception('invalid gw string')
         if dns and not self.checkIPFormat(dns): raise Exception('invalid dns string')
         if ntp and not self.checkIPFormat(ntp): raise Exception('invalid ntp string')
@@ -77,7 +91,7 @@ class Controller:
         if if_p.isdigit(): intf = Interface.get(int(if_p))
         else: intf = Interface.one(Interface.name==if_p)
         if not intf: raise Exception('non-exist interface')
-        return intf.createNameSpace(name, gw, dns, ntp).toDict()
+        return intf.createNameSpace(name, range, gw, dns, ntp).toDict()
     
     def deleteNameSpace(self, ns_p):
         if ns_p.isdigit(): ns = NameSpace.get(int(ns_p))

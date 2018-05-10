@@ -79,13 +79,23 @@ class Interface(Model):
         self.update()
         return self
     
-    def createNameSpace(self, ns_name, gw='', dns='', ntp=''):
+    def createNameSpace(self, ns_name, range='', gw='', dns='', ntp=''):
         if self.ns_id: raise Exception('interface assigned to namespace')
-        ns = NameSpace(self, ns_name, gw, dns, ntp).create()
+        ns = NameSpace(self, ns_name, range, gw, dns, ntp).create()
         self.ns_id = ns.id
         self.ns_name = ns.name
         self.update()
         return ns
+    
+    def delete(self):
+        if self.ns_id:
+            ns = NameSpace.get(self.ns_id)
+            if ns:
+                ns.__delete_namespace__()
+                hosts = Host.list(Host.ns_id==ns.id)
+                for host in hosts: Model.delete(host)
+                Model.delete(ns)
+        return Model.delete(self)
     
     def toDict(self):
         return {
@@ -112,11 +122,12 @@ class NameSpace(Model):
     if_ip = String(16)
     net = String(16)
     mask = String(16)
+    range = String(32)
     gw = String(16)
     dns = String(16)
     ntp = String(16)
     
-    def __init__(self, intf, name, gw, dns, ntp):
+    def __init__(self, intf, name, range, gw, dns, ntp):
         self.name = name
         self.pid = 0
         self.if_id = intf.id
@@ -125,6 +136,7 @@ class NameSpace(Model):
         self.if_ip = intf.ip
         self.net = intf.net
         self.mask = intf.mask
+        self.range = range
         self.gw = gw
         self.dns = dns
         self.ntp = ntp
@@ -185,6 +197,7 @@ class NameSpace(Model):
             'if_ip' : self.if_ip,
             'net' : self.net,
             'mask' : self.mask,
+            'range' : self.range,
             'gw' : self.gw,
             'dns' : self.dns,
             'ntp' : self.ntp
@@ -208,7 +221,8 @@ class Host(Model):
     def create(self):
         ns = NameSpace.get(self.ns_id)
         hosts = Host.list(Host.ns_id==self.ns_id)
-        dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (ns.mask, ns.net, ns.net)
+        if ns.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (ns.mask, ns.range) 
+        else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (ns.mask, ns.net, ns.net)
         hosts_file = ''
         if ns.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (ns.gw)
         if ns.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (ns.dns)
@@ -232,7 +246,8 @@ class Host(Model):
         Model.delete(self)
         ns = NameSpace.get(self.ns_id)
         hosts = Host.list(Host.ns_id==self.ns_id)
-        dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (ns.mask, ns.net, ns.net)
+        if ns.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (ns.mask, ns.range) 
+        else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (ns.mask, ns.net, ns.net)
         hosts_file = ''
         if ns.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (ns.gw)
         if ns.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (ns.dns)
