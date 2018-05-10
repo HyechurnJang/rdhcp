@@ -146,7 +146,7 @@ class NameSpace(Model):
             with open('/opt/rdhcp/%s/dhcp' % self.name, 'w') as fd:
                 fd.write('dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net))
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
-            cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name))
+            cli('ip netns exec %s screen -dmS %s /usr/sbin/dnsmasq --no-daemon --no-resolv --no-poll --no-hosts --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name))
             with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd:
                 self.pid = int(fd.read())
         except Exception as e:
