@@ -93,7 +93,7 @@ class Controller:
     
     def getHost(self, h_p):
         if h_p.isdigit(): h = Host.get(int(h_p))
-        else: Host.one(Host.mac==h_p)
+        else: h = Host.one(Host.mac==h_p)
         if not h: raise Exception('non-exist host')
         return h.toDict()
     
@@ -107,7 +107,7 @@ class Controller:
     
     def deleteHost(self, h_p):
         if h_p.isdigit(): h = Host.get(int(h_p))
-        else: Host.one(Host.mac==h_p)
+        else: h = Host.one(Host.mac==h_p)
         if not h: raise Exception('non-exist host')
         return h.delete().toDict()
 
