@@ -9,11 +9,18 @@ from sql import *
 from ipaddress import ip_network
 from netifaces import interfaces, ifaddresses, AF_INET, AF_LINK
 
+DEBUG = True
+
 # db = Sql(File())
 db = Sql(Mysql('localhost', 'root', '1234Qwer', 'rdhcp'))
 
 def cli(cmd, force=False):
-    ret = os.system(cmd)
+    if DEBUG: print 'CMD > %s' % cmd
+    try: ret = os.system(cmd)
+    except Exception as e:
+        if DEBUG: print 'EXCEPT %s' % str(e)
+        raise e
+    if DEBUG: print 'COMPLETE %d' % ret
     if ret > 0 and not force: raise Exception('CMD(%s) >> %d' % (cmd, ret))
 
 @model(db)
@@ -147,8 +154,10 @@ class NameSpace(Model):
                 fd.write('dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net))
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
             cli('ip netns exec %s screen -dmS %s /usr/sbin/dnsmasq --no-daemon --no-resolv --no-poll --no-hosts --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name))
+            print 'read pid'
             with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd:
                 self.pid = int(fd.read())
+            print 'pid %d' % self.pid
         except Exception as e:
             self.__delete_namespace__()
             raise e
