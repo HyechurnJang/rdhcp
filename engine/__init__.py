@@ -1,9 +1,15 @@
 
+import re
 from pygics import rest, Lock
 from .core import controller
 from .model import Interface, NameSpace, Host
 
 lock = Lock()
+
+@rest('GET', '/find')
+def find_host(request, namespace, ip):
+    try: return controller.findHost(namespace, ip)
+    except Exception as e: return {'error' : str(e)}
 
 @rest('GET', '/sync')
 def sync_interfaces(request):
@@ -80,12 +86,14 @@ def delete_namespace(request, namespace):
     return ret
 
 @rest('GET', '/host')
-def get_host(request, host=None):
+def get_host(request, param=None):
     try:
-        if host: return controller.getHost(host)
+        if param:
+            if controller.checkMACFormat(param) or param.isdigit(): return controller.getHost(param)
+            else: controller.getHosts(param)
         else: return {'data' : controller.getHosts()}
     except Exception as e: return {'error' : str(e)}
-
+    
 @rest('POST', '/host')
 def create_host(request):
     try:

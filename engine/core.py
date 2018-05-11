@@ -101,12 +101,25 @@ class Controller:
     #===========================================================================
     # Host
     #===========================================================================
-    def getHosts(self):
+    def getHosts(self, ns_p=None):
+        if ns_p:
+            if ns_p.isdigit(): ns = NameSpace.get(int(ns_p))
+            else: ns = NameSpace.one(NameSpace.name==ns_p)
+            if not ns: raise Exception('non-exist namespace')
+            return [h.toDict() for h in Host.list(Host.ns_id==ns.id)]
         return [h.toDict() for h in Host.list()]
     
     def getHost(self, h_p):
         if h_p.isdigit(): h = Host.get(int(h_p))
         else: h = Host.one(Host.mac==h_p)
+        if not h: raise Exception('non-exist host')
+        return h.toDict()
+    
+    def findHost(self, ns_p, ip):
+        if ns_p.isdigit(): ns = NameSpace.get(int(ns_p))
+        else: ns = NameSpace.one(NameSpace.name==ns_p)
+        if not ns: raise Exception('non-exist namespace')
+        h = Host.one(Host.ns_id==ns.id, Host.ip==ip)
         if not h: raise Exception('non-exist host')
         return h.toDict()
     
