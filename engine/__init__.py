@@ -90,7 +90,7 @@ def get_host(request, param=None):
     try:
         if param:
             if controller.checkMACFormat(param) or param.isdigit(): return controller.getHost(param)
-            else: controller.getHosts(param)
+            else: return {'data' : controller.getHosts(param)}
         else: return {'data' : controller.getHosts()}
     except Exception as e: return {'error' : str(e)}
     
