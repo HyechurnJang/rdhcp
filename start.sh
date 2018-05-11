@@ -2,4 +2,13 @@
 
 IF_MGMT=$1
 
-screen -dmS rdhcp python server.py -m "$IF_MGMT"
+function usages {
+	echo "Usages: start.sh <MGMT_INTERFACE_NAME>"
+	exit 1
+}
+
+if [ -z "$IF_MGMT" ]; then
+	usages
+fi
+
+screen -dmS rdhcp python server.py -m $IF_MGMT
