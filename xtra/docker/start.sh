@@ -28,5 +28,3 @@ echo ""
 echo "### Engine Logs ###"
 echo ""
 sudo docker logs -f rdhcp_engine
-
-

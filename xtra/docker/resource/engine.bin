@@ -6,6 +6,4 @@ fi
 
 cd /root/rdhcp
 git pull
-python server.py -m $RDHCP_IF_MGMT
-
-
+python server.py -m $RDHCP_IF_MGMT -d 172.17.0.1

@@ -11,8 +11,14 @@ from netifaces import ifaddresses, AF_INET, AF_LINK
 
 DEBUG = True
 
-# db = Sql(File())
-db = Sql(Mysql('localhost', 'root', '1234Qwer', 'rdhcp'))
+db = Sql(
+    Mysql(
+        os.environ.get('RDHCP_DATABASE', 'localhost'),
+        'root',
+        os.environ.get('RDHCP_PASSWORD', 'rdhcp'),
+        'rdhcp'
+    )
+)
 
 def cli(cmd, force=False):
     ret = os.system(cmd)
