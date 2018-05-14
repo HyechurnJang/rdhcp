@@ -4,6 +4,7 @@ MGMT=$1
 
 function usages {
 	echo "Usages: start.sh <MGMT_IF_NAME>"
+	echo ""
 	exit 1
 }
 
