@@ -14,9 +14,13 @@ fi
 
 echo "Start RDHCP Database"
 sudo docker run --name rdhcp_db --network=host --privileged -d rdhcp/db
-echo "Wait Database 10 Seconds"
+echo "Wait Database 15 Seconds"
 echo ""
-sleep 10
+for i in {1..15}; do
+	echo -n "#"
+	sleep 1
+done
+echo "" 
 
 echo "Start RDHCP Engine"
 sudo docker run --name rdhcp_engine --network=host --privileged -e RDHCP_IF_MGMT=$MGMT -d rdhcp/engine
