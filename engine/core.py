@@ -16,6 +16,7 @@ class Controller:
     def __init__(self):
         os.system('mkdir -p /opt/rdhcp')
         self.if_mgmt = os.environ.get('RDHCP_IF_MGMT', '')
+        self.if_ex = ['docker0']
         self.syncInterfaces()
         self.syncNameSpace()
     
@@ -35,10 +36,14 @@ class Controller:
         if_list.remove('lo')
         try: if_list.remove(self.if_mgmt)
         except: pass
+        try: if_list.remove('docker0')
+        except: pass
         for if_name in if_list:
             intf = Interface.one(Interface.name==if_name)
             if intf: intf.sync()
-            else: Interface(if_name).create()
+            else:
+                ns = NameSpace.one(NameSpace.name==if_name)
+                if not ns: Interface(if_name).create()
         for intf in Interface.list():
             if intf.name not in if_list: intf.delete()
         return [intf.toDict() for intf in Interface.list()]
@@ -88,6 +93,7 @@ class Controller:
         if dns and not self.checkIPFormat(dns): raise Exception('invalid dns string')
         if ntp and not self.checkIPFormat(ntp): raise Exception('invalid ntp string')
         if name.isdigit(): raise Exception('name must be non-digit string')
+        if Interface.one(Interface.name==name): raise Exception('could not set name like as interface')
         if NameSpace.one(NameSpace.name==name): raise Exception('name is already exist')
         if if_p.isdigit(): intf = Interface.get(int(if_p))
         else: intf = Interface.one(Interface.name==if_p)
