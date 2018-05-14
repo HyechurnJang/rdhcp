@@ -14,7 +14,11 @@ def find_host(request, namespace, ip):
 @rest('GET', '/sync')
 def sync_interfaces(request):
     lock.on()
-    try: ret = {'data' : controller.syncInterfaces()}
+    try:
+        ret = {
+            'interface' : controller.syncInterfaces(),
+            'namespace' : controller.syncNameSpace()
+        }
     except Exception as e: ret = {'error' : str(e)}
     lock.off()
     return ret
@@ -22,16 +26,6 @@ def sync_interfaces(request):
 @rest('GET', '/mgmt')
 def get_if_mgmt(request):
     return {'data' : controller.if_mgmt}
-
-@rest('POST', '/mgmt')
-def set_if_mgmt(request):
-    try: if_mgmt = request.data['interface']
-    except Exception as e: return {'error' : str(e)}
-    lock.on()
-    try: ret = {'data' : controller.setIfMgmt(if_mgmt)}
-    except Exception as e: ret = {'error' : str(e)}
-    lock.off()
-    return ret
 
 @rest('GET', '/interface')
 def get_interface(request, interface=None):

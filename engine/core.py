@@ -17,6 +17,7 @@ class Controller:
         os.system('mkdir -p /opt/rdhcp')
         self.if_mgmt = os.environ.get('RDHCP_IF_MGMT', '')
         self.syncInterfaces()
+        self.syncNameSpace()
     
     def checkIPFormat(self, ip):
         if re.search('^\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?$', ip): return True
@@ -42,10 +43,6 @@ class Controller:
             if intf.name not in if_list: intf.delete()
         return [intf.toDict() for intf in Interface.list()]
     
-    def setIfMgmt(self, if_mgmt):
-        self.if_mgmt = if_mgmt
-        return self.syncInterfaces()
-    
     def getInterfaces(self):
         return [intf.toDict() for intf in Interface.list()]
     
@@ -66,6 +63,13 @@ class Controller:
     #===========================================================================
     # NameSpace
     #===========================================================================
+    def syncNameSpace(self):
+        ns_list = NameSpace.list()
+        for ns in ns_list:
+            try: ns.__sync__()
+            except: pass
+        return [ns.toDict() for ns in ns_list]
+    
     def getNameSpaces(self):
         return [ns.toDict() for ns in NameSpace.list()]
     

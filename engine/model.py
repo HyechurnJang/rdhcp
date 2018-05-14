@@ -7,7 +7,7 @@ Created on 2018. 3. 30.
 import os
 from sql import *
 from ipaddress import ip_network
-from netifaces import interfaces, ifaddresses, AF_INET, AF_LINK
+from netifaces import ifaddresses, AF_INET, AF_LINK
 
 DEBUG = True
 
@@ -37,7 +37,10 @@ class Interface(Model):
         self.ns_name = ''
         self.__sync__()
         
-    def __sync__(self):
+    def __sync__(self): # DEV to DATA
+        
+        print 'interface sync %s' % self.name
+        
         addrs = ifaddresses(self.name)
         try: self.mac = addrs[AF_LINK][0]['addr']
         except: self.mac = '00:00:00:00:00:00'
@@ -141,35 +144,32 @@ class NameSpace(Model):
         self.dns = dns
         self.ntp = ntp
     
-    def create(self):
+    def __sync__(self):
         dummy_mac = 'aa:aa:aa' + self.if_mac[9:]
-        try:
-            cli('ip netns add %s' % self.name)
-            cli('brctl addbr %s' % self.name)
-            cli('ifconfig %s up' % self.name)
-            cli('ip link add v%s type veth peer name v%s netns %s' % (self.name, self.name, self.name))
-            cli('ifconfig v%s 0.0.0.0 up' % self.name)
-            cli('ip netns exec %s ifconfig lo up' % self.name)
-            cli('ifconfig %s 0.0.0.0 up' % self.if_name)
-            cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
-            cli('ip netns exec %s ifconfig v%s %s netmask %s up' % (self.name, self.name, self.if_ip, self.mask))
-            cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
-            cli('brctl addif %s v%s' % (self.name, self.name))
-            cli('brctl addif %s %s' % (self.name, self.if_name))
-            cli('mkdir -p /opt/rdhcp/%s' % self.name)
+        cli('ip netns add %s' % self.name)
+        cli('brctl addbr %s' % self.name)
+        cli('ifconfig %s up' % self.name)
+        cli('ip link add v%s type veth peer name v%s netns %s' % (self.name, self.name, self.name))
+        cli('ifconfig v%s 0.0.0.0 up' % self.name)
+        cli('ip netns exec %s ifconfig lo up' % self.name)
+        cli('ifconfig %s 0.0.0.0 up' % self.if_name)
+        cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
+        cli('ip netns exec %s ifconfig v%s %s netmask %s up' % (self.name, self.name, self.if_ip, self.mask))
+        cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
+        cli('brctl addif %s v%s' % (self.name, self.name))
+        cli('brctl addif %s %s' % (self.name, self.if_name))
+        cli('mkdir -p /opt/rdhcp/%s' % self.name)
+        if not os.path.exists('/opt/rdhcp/%s/hosts' % self.name):
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
+        if not os.path.exists('/opt/rdhcp/%s/dhcp' % self.name):
             if self.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (self.mask, self.range) 
             else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net)
             if self.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (self.gw)
             if self.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (self.dns)
             if self.ntp != '': dhcp_file += 'dhcp-option=42,%s\n' % (self.ntp)
             with open('/opt/rdhcp/%s/dhcp' % self.name, 'w') as fd: fd.write(dhcp_file)
-            cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name))
-            with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd: self.pid = int(fd.read())
-        except Exception as e:
-            self.__delete_namespace__()
-            raise e
-        return Model.create(self)
+        cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name))
+        with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd: self.pid = int(fd.read())
     
     def __delete_namespace__(self):
         if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
@@ -179,6 +179,16 @@ class NameSpace(Model):
         cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
         cli('ifconfig %s hw ether %s' % (self.if_name, self.if_mac), force=True)
         cli('rm -rf /opt/rdhcp/%s' % self.name, force=True)
+    
+    def sync(self):
+        try: self.__sync__()
+        except Exception as e:
+            self.__delete_namespace__()
+            raise e
+    
+    def create(self):
+        self.sync()
+        return Model.create(self)
     
     def delete(self):
         self.__delete_namespace__()
