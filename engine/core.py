@@ -42,8 +42,10 @@ class Controller:
             intf = Interface.one(Interface.name==if_name)
             if intf: intf.sync()
             else:
-                ns = NameSpace.one(NameSpace.name==if_name)
-                if not ns: Interface(if_name).create()
+                ns1 = NameSpace.one(NameSpace.name==if_name)
+                if if_name[0] == 'v': ns2 = NameSpace.one(NameSpace.name==if_name[1:])
+                else: ns2 = None
+                if not ns1 and not ns2: Interface(if_name).create()
         for intf in Interface.list():
             if intf.name not in if_list: intf.delete()
         return [intf.toDict() for intf in Interface.list()]
