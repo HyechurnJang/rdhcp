@@ -35,12 +35,8 @@ class Interface(Model):
         self.name = name
         self.ns_id = 0
         self.ns_name = ''
-        self.__sync__()
-        
-    def __sync__(self): # DEV to DATA
-        
-        print 'interface sync %s' % self.name
-        
+    
+    def __sync__(self):
         addrs = ifaddresses(self.name)
         try: self.mac = addrs[AF_LINK][0]['addr']
         except: self.mac = '00:00:00:00:00:00'
@@ -66,6 +62,11 @@ class Interface(Model):
             self.update()
         return self
     
+    def deploy(self):
+        if self.ns_id: raise Exception('interface assigned to namespace')
+        cli('ifconfig %s %s netmask %s up' % (self.name, self.ip, self.mask))
+        return self
+    
     def setIP(self, ip, mask):
         if self.ns_id: raise Exception('interface assigned to namespace')
         cli('ifconfig %s %s netmask %s up' % (self.name, ip, mask))
@@ -89,6 +90,10 @@ class Interface(Model):
         self.ns_name = ns.name
         self.update()
         return ns
+    
+    def create(self):
+        self.__sync__()
+        return Model.create(self)
     
     def delete(self):
         if self.ns_id:
@@ -162,7 +167,7 @@ class NameSpace(Model):
         if not os.path.exists('/opt/rdhcp/%s/hosts' % self.name):
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
         if not os.path.exists('/opt/rdhcp/%s/dhcp' % self.name):
-            if self.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (self.mask, self.range) 
+            if self.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (self.mask, self.range)
             else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net)
             if self.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (self.gw)
             if self.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (self.dns)
@@ -182,12 +187,14 @@ class NameSpace(Model):
     
     def sync(self):
         try: self.__sync__()
+        except: pass
+        return self
+    
+    def create(self):
+        try: self.__sync__()
         except Exception as e:
             self.__delete_namespace__()
             raise e
-    
-    def create(self):
-        self.sync()
         return Model.create(self)
     
     def delete(self):

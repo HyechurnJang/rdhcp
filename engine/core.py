@@ -65,9 +65,7 @@ class Controller:
     #===========================================================================
     def syncNameSpace(self):
         ns_list = NameSpace.list()
-        for ns in ns_list:
-            try: ns.__sync__()
-            except: pass
+        for ns in ns_list: ns.sync()
         return [ns.toDict() for ns in ns_list]
     
     def getNameSpaces(self):
