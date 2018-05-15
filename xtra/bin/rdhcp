@@ -40,6 +40,7 @@ def __view__(data, _i=1):
             if isinstance(val, dict) or isinstance(val, list): __view__(val, _i + 1)
             else: print '%s%s' % (indent, str(val))
     else: print '%s%s' % (indent, str(data))
+    if _i == 1: print ''
 
 def find(ns, ip): __view__(__get__('/find/%s/%s' % (ns, ip)))
 def status(): __view__(__get__('/status'))
