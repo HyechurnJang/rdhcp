@@ -25,7 +25,14 @@ def sync_interfaces(request):
 
 @rest('GET', '/mgmt')
 def get_if_mgmt(request):
-    return {'data' : controller.if_mgmt}
+    return {
+        'name' : os.environ.get('RDHCP_IF_MGMT'),
+        'ip' : os.environ.get('RDHCP_IF_MGMT_IP'),
+        'mask' : os.environ.get('RDHCP_IF_MGMT_MASK'),
+        'net' : os.environ.get('RDHCP_IF_MGMT_NET'),
+        'cidr' : os.environ.get('RDHCP_IF_MGMT_CIDR'),
+        'prefix' : os.environ.get('RDHCP_IF_MGMT_PREFIX')
+    }
 
 @rest('GET', '/interface')
 def get_interface(request, interface=None):
