@@ -23,7 +23,7 @@ def __delete__(url):
     resp = requests.delete(base_url + url)
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
-def __view__(data, _i=0):
+def __view__(data, _i=1):
     indent = ''
     for _ in range(0, _i): indent += '  '
     if isinstance(data, dict):
