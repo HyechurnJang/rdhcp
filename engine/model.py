@@ -25,6 +25,17 @@ def cli(cmd, force=False):
     if ret > 0 and not force: raise Exception('CMD(%s) >> %d' % (cmd, ret))
 
 @model(db)
+class NTP(Model):
+    
+    server = String(256)
+    
+    def __init__(self, server):
+        self.server = server
+        
+    def toDict(self):
+        return {'server' : self.server}
+
+@model(db)
 class Interface(Model):
     
     name = String(32)

@@ -7,8 +7,8 @@ Created on 2018. 3. 30.
 import os
 import re
 from ipaddress import ip_network
-from netifaces import interfaces, ifaddresses, AF_INET, AF_LINK
-from .model import Interface, NameSpace, Host
+from netifaces import interfaces, ifaddresses, AF_INET
+from .model import NTP, Interface, NameSpace, Host
 
 DEBUG = False
 
@@ -16,7 +16,7 @@ class Controller:
     
     def __init__(self):
         os.system('mkdir -p /opt/rdhcp')
-        os.system('touch /opt/rdhcp/ntp_server_list')
+        self.syncNTP()
         self.syncInterfaces()
         self.syncNameSpace()
     
@@ -32,9 +32,9 @@ class Controller:
     # NTP
     #===========================================================================
     def syncNTP(self):
-        ntp_servers = self.getNTPServers()
+        ntps = NTP.list()
         server_str = ''
-        for ntp_server in ntp_servers: server_str += 'server %s iburst\n' % ntp_server
+        for ntp in ntps: server_str += 'server %s iburst\n' % ntp.server
         if server_str:
             with open('/etc/ntp.conf', 'w') as fd:
                 fd.write('''
@@ -53,32 +53,20 @@ restrict ::1
 restrict source notrap nomodify noquery
                 ''' % server_str)
             os.system('systemctl restart ntp')
-        return ntp_servers
+        return [ntp.toDict() for ntp in ntps]
     
     def getNTPServers(self):
-        with open('/opt/rdhcp/ntp_server_list', 'r') as fd: ntp_server_lines = fd.readlines()
-        ntp_servers = []
-        for ntp_server_line in ntp_server_lines:
-            try: server = ntp_server_line.remove('\n', '')
-            except: continue
-            if server: ntp_servers.append(server)
-        return server
+        return [ntp.toDict() for ntp in NTP.list()]
     
     def addNTPServer(self, server):
-        ntp_servers = self.getNTPServers()
-        for ntp_server in ntp_servers:
-            if server == ntp_server: raise Exception('already exist')
-        ntp_servers.append(server)
-        with open('/opt/rdhcp/ntp_server_list', 'w') as fd:
-            for ntp_server in ntp_servers: fd.write('%s\n' % ntp_server)
+        if NTP.one(NTP.server==server): raise Exception('server already exist')
+        NTP(server).create()
         return self.syncNTP()
     
     def delNTPServer(self, server):
-        ntp_servers = self.getNTPServers()
-        if server not in ntp_servers: raise Exception('non-exist server')
-        ntp_servers.remove(server)
-        with open('/opt/rdhcp/ntp_server_list', 'w') as fd:
-            for ntp_server in ntp_servers: fd.write('%s\n' % ntp_server)
+        ntp = NTP.one(NTP.server==server)
+        if not ntp: raise Exception('non-exist server')
+        ntp.delete()
         return self.syncNTP()
     
     #===========================================================================
