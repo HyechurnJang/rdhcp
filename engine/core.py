@@ -97,8 +97,8 @@ restrict source notrap nomodify noquery
             os.environ['RDHCP_IF_MGMT_NET'] = if_mgmt_net
             os.environ['RDHCP_IF_MGMT_CIDR'] = if_mgmt_cidr
             os.environ['RDHCP_IF_MGMT_PREFIX'] = if_mgmt_prefix
-            os.system('iptables -t nat -D POSTROUTING -o %s -j MASQUERADE', if_mgmt_name)
-            os.system('iptables -t nat -I POSTROUTING -o %s -j MASQUERADE', if_mgmt_name)
+            os.system('iptables -t nat -D POSTROUTING -o %s -j MASQUERADE' % if_mgmt_name)
+            os.system('iptables -t nat -I POSTROUTING -o %s -j MASQUERADE' % if_mgmt_name)
         except Exception as e:
             print 'RDHCP_IF_MGMT is incorrect state : %s' % str(e)
             exit(1)
