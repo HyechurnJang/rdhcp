@@ -16,7 +16,6 @@ class Controller:
     def __init__(self):
         os.system('mkdir -p /opt/rdhcp')
         self.if_mgmt = os.environ.get('RDHCP_IF_MGMT', '')
-        self.if_ex = ['docker0']
         self.syncInterfaces()
         self.syncNameSpace()
     
@@ -33,6 +32,9 @@ class Controller:
     #===========================================================================
     def syncInterfaces(self):
         if_list = interfaces()
+        
+        print if_list
+        
         if_list.remove('lo')
         try: if_list.remove(self.if_mgmt)
         except: pass
