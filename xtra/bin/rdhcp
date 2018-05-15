@@ -11,15 +11,15 @@ def usages():
     exit(1)
 
 def __get__(url):
-    resp = requests.get(url)
+    resp = requests.get(base_url + url)
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
 def __post__(url, data):
-    resp = requests.post(url, data=json.dumps(data))
+    resp = requests.post(base_url + url, data=json.dumps(data))
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
 def __delete__(url):
-    resp = requests.delete(url)
+    resp = requests.delete(base_url + url)
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
 def __view__(data):
