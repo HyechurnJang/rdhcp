@@ -164,9 +164,9 @@ class NameSpace(Model):
         cli('ifconfig v%s 0.0.0.0 up' % self.name)
         cli('ip netns exec %s ifconfig lo up' % self.name)
         cli('ifconfig %s 0.0.0.0 up' % self.if_name)
-        cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
+#         cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
         cli('ip netns exec %s ifconfig v%s %s netmask %s up' % (self.name, self.name, self.if_ip, self.mask))
-        cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
+#         cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
         cli('brctl addif %s v%s' % (self.name, self.name))
         cli('brctl addif %s %s' % (self.name, self.if_name))
         cli('mkdir -p /opt/rdhcp/%s' % self.name)
@@ -188,7 +188,7 @@ class NameSpace(Model):
         cli('ifconfig %s down' % self.name, force=True)
         cli('brctl delbr %s' % self.name, force=True)
         cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
-        cli('ifconfig %s hw ether %s' % (self.if_name, self.if_mac), force=True)
+#         cli('ifconfig %s hw ether %s' % (self.if_name, self.if_mac), force=True)
         cli('rm -rf /opt/rdhcp/%s' % self.name, force=True)
     
     def sync(self):
