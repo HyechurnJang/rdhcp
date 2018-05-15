@@ -56,8 +56,13 @@ restrict source notrap nomodify noquery
         return ntp_servers
     
     def getNTPServers(self):
-        with open('/opt/rdhcp/ntp_server_list', 'r') as fd: ntp_servers = fd.readlines()
-        return filter(None, ntp_servers)
+        with open('/opt/rdhcp/ntp_server_list', 'r') as fd: ntp_server_lines = fd.readlines()
+        ntp_servers = []
+        for ntp_server_line in ntp_server_lines:
+            try: server = ntp_server_line.remove('\n', '')
+            except: continue
+            if server: ntp_servers.append(server)
+        return server
     
     def addNTPServer(self, server):
         ntp_servers = self.getNTPServers()
