@@ -5,6 +5,7 @@ import json
 import requests
 
 base_url = 'http://localhost:8080'
+headers = {'Content-Type' : 'application/json', 'Accept' : 'application/json'}
 
 def usages():
     print 'Usages: rdhcp <RESOURCE> [add | del | set | ARGS...]\n'
@@ -15,7 +16,7 @@ def __get__(url):
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
 def __post__(url, data):
-    resp = requests.post(base_url + url, data=json.dumps(data))
+    resp = requests.post(base_url + url, headers=headers, data=json.dumps(data))
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
 def __delete__(url):
@@ -42,7 +43,6 @@ def host_del(h): __view__(__delete__('/host/%s' % h))
 
 if __name__ == '__main__':
     argv = sys.argv[1:]
-    print argv
     if not argv: usages()
     r = argv[0]
     if r == 'find': find(*argv[1:])
@@ -51,9 +51,8 @@ if __name__ == '__main__':
     elif r == 'ntp':
         try:
             c = argv[1].lower()
-            a = argv[2]
-            if c == 'add': ntp_add(a)
-            elif c == 'del': ntp_del(a)
+            if c == 'add': ntp_add(*argv[2:])
+            elif c == 'del': ntp_del(*argv[2:])
             else: usages()
         except: ntp()
     elif r == 'interface':
