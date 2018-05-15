@@ -36,9 +36,7 @@ class Controller:
         server_str = ''
         for ntp in ntps: server_str += 'server %s iburst\n' % ntp.server
         if server_str:
-            with open('/etc/ntp.conf', 'w') as fd:
-                fd.write('''
-driftfile /var/lib/ntp/ntp.drift
+            with open('/etc/ntp.conf', 'w') as fd: fd.write('''driftfile /var/lib/ntp/ntp.drift
 statistics loopstats peerstats clockstats
 filegen loopstats file loopstats type day enable
 filegen peerstats file peerstats type day enable
@@ -51,7 +49,7 @@ restrict -6 default kod notrap nomodify nopeer noquery limited
 restrict 127.0.0.1
 restrict ::1
 restrict source notrap nomodify noquery
-                ''' % server_str)
+''' % server_str)
             os.system('systemctl restart ntp')
         return [ntp.toDict() for ntp in ntps]
     

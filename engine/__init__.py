@@ -13,12 +13,14 @@ def find_host(request, namespace, ip):
     except Exception as e: return {'error' : str(e)}
 
 @rest('GET', '/sync')
-def sync_interfaces(request):
+def sync_resource(request):
     lock.on()
     try:
         ret = {
             'interface' : controller.syncInterfaces(),
-            'namespace' : controller.syncNameSpace()
+            'namespace' : controller.syncNameSpace(),
+            'host' : controller.getHosts(),
+            'ntp' : controller.syncNTP(),
         }
     except Exception as e: ret = {'error' : str(e)}
     lock.off()
@@ -37,7 +39,7 @@ def get_if_mgmt(request):
 
 @rest('GET', '/ntp')
 def get_ntp(request):
-    try: return {'data' : controller.getNTPServers()}
+    try: return {'ntp' : controller.getNTPServers()}
     except Exception as e: return {'error' : str(e)}
 
 @rest('POST', '/ntp')
@@ -45,7 +47,7 @@ def add_ntp(request):
     try: server = request.data['server']
     except Exception as e: return {'error' : str(e)}
     lock.on()
-    try: ret = {'data' : controller.addNTPServer(server)}
+    try: ret = {'ntp' : controller.addNTPServer(server)}
     except Exception as e: ret = {'error' : str(e)}
     lock.off()
     return ret
@@ -53,7 +55,7 @@ def add_ntp(request):
 @rest('DELETE', '/ntp')
 def del_ntp(request, server):
     lock.on()
-    try: ret = {'data' : controller.delNTPServer(server)}
+    try: ret = {'ntp' : controller.delNTPServer(server)}
     except Exception as e: ret = {'error' : str(e)}
     lock.off()
     return ret
@@ -62,7 +64,7 @@ def del_ntp(request, server):
 def get_interface(request, interface=None):
     try:
         if interface: return controller.getInterface(interface)
-        else: return {'data' : controller.getInterfaces()}
+        else: return {'interface' : controller.getInterfaces()}
     except Exception as e: return {'error' : str(e)}
 
 @rest('POST', '/interface')
@@ -82,7 +84,7 @@ def set_interface(request):
 def get_namespace(request, namespace=None):
     try:
         if namespace: return controller.getNameSpace(namespace)
-        else: return {'data' : controller.getNameSpaces()}
+        else: return {'namespace' : controller.getNameSpaces()}
     except Exception as e: return {'error' : str(e)}
 
 @rest('POST', '/namespace')
@@ -115,8 +117,8 @@ def get_host(request, param=None):
     try:
         if param:
             if controller.checkMACFormat(param) or param.isdigit(): return controller.getHost(param)
-            else: return {'data' : controller.getHosts(param)}
-        else: return {'data' : controller.getHosts()}
+            else: return {'host' : controller.getHosts(param)}
+        else: return {'host' : controller.getHosts()}
     except Exception as e: return {'error' : str(e)}
     
 @rest('POST', '/host')
