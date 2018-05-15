@@ -92,6 +92,9 @@ class Interface(Model):
     def createNameSpace(self, ns_name, range='', gw='', dns='', ntp=''):
         if self.ns_id: raise Exception('interface assigned to namespace')
         if self.ip == '0.0.0.0': raise Exception('ip of interface is not assigned')
+        if not gw: gw = self.ip
+        if not dns: dns = self.ip
+        if not ntp: ntp = os.environ.get('RDHCP_IF_MGMT_IP')
         ns = NameSpace(self, ns_name, range, gw, dns, ntp).create()
         self.ns_id = ns.id
         self.ns_name = ns.name
@@ -178,11 +181,11 @@ class NameSpace(Model):
         if not os.path.exists('/opt/rdhcp/%s/dhcp' % self.name):
             if self.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (self.mask, self.range)
             else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (self.mask, self.net, self.net)
-            if self.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (self.gw)
-            if self.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (self.dns)
-            if self.ntp != '': dhcp_file += 'dhcp-option=42,%s\n' % (self.ntp)
+            dhcp_file += 'dhcp-option=3,%s\n' % (self.gw)
+            dhcp_file += 'dhcp-option=6,%s\n' % (self.dns)
+            dhcp_file += 'dhcp-option=42,%s\n' % (self.ntp)
             with open('/opt/rdhcp/%s/dhcp' % self.name, 'w') as fd: fd.write(dhcp_file)
-        cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name))
+        cli('ip netns exec %s /usr/sbin/dnsmasq --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name))
         with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd: self.pid = int(fd.read())
     
     def __delete_namespace__(self):
@@ -255,9 +258,9 @@ class Host(Model):
         if ns.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (ns.mask, ns.range) 
         else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (ns.mask, ns.net, ns.net)
         hosts_file = ''
-        if ns.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (ns.gw)
-        if ns.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (ns.dns)
-        if ns.ntp != '': dhcp_file += 'dhcp-option=42,%s\n' % (ns.ntp)
+        dhcp_file += 'dhcp-option=3,%s\n' % (ns.gw)
+        dhcp_file += 'dhcp-option=6,%s\n' % (ns.dns)
+        dhcp_file += 'dhcp-option=42,%s\n' % (ns.ntp)
         for host in hosts:
             dhcp_file += 'dhcp-host=%s,%s\n' % (host.mac, host.ip)
             if host.name: hosts_file += '%s    %s\n' % (host.ip, host.name)
@@ -281,9 +284,9 @@ class Host(Model):
         if ns.range: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s\n' % (ns.mask, ns.range) 
         else: dhcp_file = 'dhcp-option=1,%s\ndhcp-range=%s,%s\n' % (ns.mask, ns.net, ns.net)
         hosts_file = ''
-        if ns.gw != '': dhcp_file += 'dhcp-option=3,%s\n' % (ns.gw)
-        if ns.dns != '': dhcp_file += 'dhcp-option=6,%s\n' % (ns.dns)
-        if ns.ntp != '': dhcp_file += 'dhcp-option=42,%s\n' % (ns.ntp)
+        dhcp_file += 'dhcp-option=3,%s\n' % (ns.gw)
+        dhcp_file += 'dhcp-option=6,%s\n' % (ns.dns)
+        dhcp_file += 'dhcp-option=42,%s\n' % (ns.ntp)
         for host in hosts:
             dhcp_file += 'dhcp-host=%s,%s\n' % (host.mac, host.ip)
             if host.name: hosts_file += '%s    %s\n' % (host.ip, host.name)

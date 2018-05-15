@@ -35,6 +35,29 @@ def get_if_mgmt(request):
         'prefix' : os.environ.get('RDHCP_IF_MGMT_PREFIX')
     }
 
+@rest('GET', '/ntp')
+def get_ntp(request):
+    try: return {'data' : controller.getNTPServers()}
+    except Exception as e: return {'error' : str(e)}
+
+@rest('POST', '/ntp')
+def add_ntp(request):
+    try: server = request.data['server']
+    except Exception as e: return {'error' : str(e)}
+    lock.on()
+    try: ret = {'data' : controller.addNTPServer(server)}
+    except Exception as e: ret = {'error' : str(e)}
+    lock.off()
+    return ret
+
+@rest('DELETE', '/ntp')
+def del_ntp(request, server):
+    lock.on()
+    try: ret = {'data' : controller.delNTPServer(server)}
+    except Exception as e: ret = {'error' : str(e)}
+    lock.off()
+    return ret
+
 @rest('GET', '/interface')
 def get_interface(request, interface=None):
     try:

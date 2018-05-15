@@ -28,6 +28,54 @@ class Controller:
         return False
     
     #===========================================================================
+    # NTP
+    #===========================================================================
+    def syncNTP(self):
+        ntp_servers = self.getNTPServers()
+        server_str = ''
+        for ntp_server in ntp_servers: server_str += 'server %s iburst\n' % ntp_server
+        if server_str:
+            with open('/etc/ntp.conf', 'w') as fd:
+                fd.write('''
+driftfile /var/lib/ntp/ntp.drift
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
+%s
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+restrict -4 default kod notrap nomodify nopeer noquery limited
+restrict -6 default kod notrap nomodify nopeer noquery limited
+restrict 127.0.0.1
+restrict ::1
+restrict source notrap nomodify noquery
+                ''' % server_str)
+            os.system('systemctl restart ntp')
+        return ntp_servers
+    
+    def getNTPServers(self):
+        with open('/opt/rdhcp/ntp_server_list', 'r') as fd: ntp_servers = fd.readlines()
+        return filter(None, ntp_servers)
+    
+    def addNTPServer(self, server):
+        ntp_servers = self.getNTPServers()
+        for ntp_server in ntp_servers:
+            if server == ntp_server: raise Exception('already exist')
+        ntp_servers.append(server)
+        with open('/opt/rdhcp/ntp_server_list', 'w') as fd:
+            for ntp_server in ntp_servers: fd.write('%s\n' % ntp_server)
+        return self.syncNTP()
+    
+    def delNTPServer(self, server):
+        ntp_servers = self.getNTPServers()
+        if server not in ntp_servers: raise Exception('non-exist server')
+        ntp_servers.remove(server)
+        with open('/opt/rdhcp/ntp_server_list', 'w') as fd:
+            for ntp_server in ntp_servers: fd.write('%s\n' % ntp_server)
+        return self.syncNTP()
+    
+    #===========================================================================
     # Interface
     #===========================================================================
     def syncInterfaces(self):
@@ -49,6 +97,8 @@ class Controller:
             os.environ['RDHCP_IF_MGMT_NET'] = if_mgmt_net
             os.environ['RDHCP_IF_MGMT_CIDR'] = if_mgmt_cidr
             os.environ['RDHCP_IF_MGMT_PREFIX'] = if_mgmt_prefix
+            os.system('iptables -t nat -D POSTROUTING -o %s -j MASQUERADE', if_mgmt_name)
+            os.system('iptables -t nat -I POSTROUTING -o %s -j MASQUERADE', if_mgmt_name)
         except Exception as e:
             print 'RDHCP_IF_MGMT is incorrect state : %s' % str(e)
             exit(1)
