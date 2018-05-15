@@ -12,6 +12,18 @@ def find_host(request, namespace, ip):
     try: return controller.findHost(namespace, ip)
     except Exception as e: return {'error' : str(e)}
 
+@rest('GET', '/status')
+def status_resource(request):
+    try:
+        ret = {
+            'interface' : controller.getInterfaces(),
+            'namespace' : controller.getNameSpaces(),
+            'host' : controller.getHosts(),
+            'ntp' : controller.getNTPServers(),
+        }
+    except Exception as e: ret = {'error' : str(e)}
+    return ret
+
 @rest('GET', '/sync')
 def sync_resource(request):
     lock.on()
