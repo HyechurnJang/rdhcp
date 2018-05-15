@@ -16,6 +16,7 @@ class Controller:
     
     def __init__(self):
         os.system('mkdir -p /opt/rdhcp')
+        os.system('touch /opt/rdhcp/ntp_server_list')
         self.syncInterfaces()
         self.syncNameSpace()
     
