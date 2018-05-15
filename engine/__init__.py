@@ -42,6 +42,7 @@ def sync_resource(request):
 def get_if_mgmt(request):
     return {
         'name' : os.environ.get('RDHCP_IF_MGMT'),
+        'mac' : os.environ.get('RDHCP_IF_MGMT_MAC'),
         'ip' : os.environ.get('RDHCP_IF_MGMT_IP'),
         'mask' : os.environ.get('RDHCP_IF_MGMT_MASK'),
         'net' : os.environ.get('RDHCP_IF_MGMT_NET'),
