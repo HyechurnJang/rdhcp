@@ -202,7 +202,7 @@ class NameSpace(Model):
     
     def __delete_namespace__(self):
         if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
-        cli('ip link del rve-%s' % self.name)
+        cli('ip link del rve-%s' % self.name, force=True)
         cli('ip netns del %s' % self.name, force=True)
         cli('iptables -D FORWARD -i rve-%s -j ACCEPT' % self.name, force=True)
         cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
