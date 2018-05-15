@@ -158,17 +158,25 @@ class NameSpace(Model):
     def __sync__(self):
         dummy_mac = 'aa:aa:aa' + self.if_mac[9:]
         cli('ip netns add %s' % self.name)
-        cli('brctl addbr %s' % self.name)
+        
+#         cli('brctl addbr %s' % self.name)
+        cli('ovs-vsctl add-br %s' % self.name)
+        
         cli('ifconfig %s up' % self.name)
         cli('ip link add v%s type veth peer name v%s netns %s' % (self.name, self.name, self.name))
         cli('ifconfig v%s 0.0.0.0 up' % self.name)
         cli('ip netns exec %s ifconfig lo up' % self.name)
         cli('ifconfig %s 0.0.0.0 up' % self.if_name)
-#         cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
+        cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
         cli('ip netns exec %s ifconfig v%s %s netmask %s up' % (self.name, self.name, self.if_ip, self.mask))
-#         cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
-        cli('brctl addif %s v%s' % (self.name, self.name))
-        cli('brctl addif %s %s' % (self.name, self.if_name))
+        cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
+        
+#         cli('brctl addif %s v%s' % (self.name, self.name))
+#         cli('brctl addif %s %s' % (self.name, self.if_name))
+        
+        cli('ovs-vsctl add-port %s v%s' % (self.name, self.name))
+        cli('ovs-vsctl add-port %s %s' % (self.name, self.if_name))
+        
         cli('mkdir -p /opt/rdhcp/%s' % self.name)
         if not os.path.exists('/opt/rdhcp/%s/hosts' % self.name):
             cli('touch /opt/rdhcp/%s/hosts' % self.name)
@@ -184,11 +192,19 @@ class NameSpace(Model):
     
     def __delete_namespace__(self):
         if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
+        
+        
+        cli('ovs-vsctl del-port %s v%s' % (self.name, self.name))
+        cli('ovs-vsctl del-port %s %s' % (self.name, self.if_name))
+        
         cli('ip netns del %s' % self.name, force=True)
         cli('ifconfig %s down' % self.name, force=True)
-        cli('brctl delbr %s' % self.name, force=True)
+        
+#         cli('brctl delbr %s' % self.name, force=True)
+        cli('ovs-vsctl del-br %s' % (self.name))
+        
         cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
-#         cli('ifconfig %s hw ether %s' % (self.if_name, self.if_mac), force=True)
+        cli('ifconfig %s hw ether %s' % (self.if_name, self.if_mac), force=True)
         cli('rm -rf /opt/rdhcp/%s' % self.name, force=True)
     
     def sync(self):
