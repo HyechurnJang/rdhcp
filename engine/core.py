@@ -35,11 +35,12 @@ class Controller:
         if_list.remove('lo')
         try:
             if_mgmt_name = os.environ.get('RDHCP_IF_MGMT', '')
-            if_mgmt_addrs = ifaddresses(self.name)
+            if_list.remove(if_mgmt_name)
+            if_mgmt_addrs = ifaddresses(if_mgmt_name)
             if_mgmt_ip_0 = if_mgmt_addrs[AF_INET][0]
             if_mgmt_ip = if_mgmt_ip_0['addr']
             if_mgmt_mask = if_mgmt_ip_0['netmask']
-            network = ip_network(unicode('%s/%s' % (self.ip, self.mask)), strict=False)
+            network = ip_network(unicode('%s/%s' % (if_mgmt_ip, if_mgmt_mask)), strict=False)
             if_mgmt_net = str(network.network_address)
             if_mgmt_prefix = str(network.prefixlen)
             if_mgmt_cidr = '%s/%s' % (if_mgmt_ip, if_mgmt_prefix)
@@ -48,8 +49,9 @@ class Controller:
             os.environ['RDHCP_IF_MGMT_NET'] = if_mgmt_net
             os.environ['RDHCP_IF_MGMT_CIDR'] = if_mgmt_cidr
             os.environ['RDHCP_IF_MGMT_PREFIX'] = if_mgmt_prefix
-            if_list.remove(if_mgmt_name)
-        except: pass
+        except Exception as e:
+            print 'RDHCP_IF_MGMT is incorrect state : %s' % str(e)
+            exit(1)
         try: if_list.remove('docker0')
         except: pass
         try: if_list.remove('ovs-system')
