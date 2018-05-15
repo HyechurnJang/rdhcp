@@ -15,7 +15,7 @@ db = Sql(
     Mysql(
         os.environ.get('RDHCP_DATABASE', 'localhost'),
         'root',
-        os.environ.get('RDHCP_PASSWORD', '1234Qwer'),
+        os.environ.get('RDHCP_PASSWORD', 'rdhcp'),
         'rdhcp'
     )
 )

@@ -1,9 +1,0 @@
-FROM python:2
-
-WORKDIR /root
-RUN git clone https://github.com/HyechurnJang/rdhcp.git
-RUN pip install pygics netifaces ipaddress
-RUN cp /root/rdhcp/xtra/docker/resource/engine.bin /usr/bin/rdhcp_engine
-RUN chmod 755 /usr/bin/rdhcp_engine
-
-CMD [ "/usr/bin/rdhcp_engine" ]

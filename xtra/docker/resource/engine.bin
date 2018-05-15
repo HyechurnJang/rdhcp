@@ -1,9 +1,0 @@
-#!/bin/bash
-
-if [ -z "$RDHCP_IF_MGMT" ]; then
-	exit 1
-fi
-
-cd /root/rdhcp
-git pull
-python server.py -m $RDHCP_IF_MGMT -d 172.17.0.1
