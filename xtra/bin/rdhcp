@@ -31,13 +31,15 @@ def __view__(data, _i=0):
         if 'id' in data: print '%sID : %d' % (indent, data['id'])
         for key, val in data.items():
             if key in ['name', 'id']: continue
-            if isinstance(val, dict) or isinstance(val, list): __view__(val, _i + 1)
-            else: print '%s%s : %s' % (indent, key.upper(), val)
+            if isinstance(val, dict) or isinstance(val, list):
+                print '%s%s' % (indent, key.upper())
+                __view__(val, _i + 1)
+            else: print '%s%s : %s' % (indent, key.upper(), str(val))
     elif isinstance(data, list):
         for val in data:
             if isinstance(val, dict) or isinstance(val, list): __view__(val, _i + 1)
-            else: print '%s%s' % (indent, val)
-    else: print '%s%s' % (indent, data)
+            else: print '%s%s' % (indent, str(val))
+    else: print '%s%s' % (indent, str(data))
 
 def find(ns, ip): __view__(__get__('/find/%s/%s' % (ns, ip)))
 def status(): __view__(__get__('/status'))
