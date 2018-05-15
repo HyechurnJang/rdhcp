@@ -36,9 +36,12 @@ def __view__(data, _i=1):
                 __view__(val, _i + 1)
             else: print '%s%-12s : %s' % (indent, key.upper(), str(val))
     elif isinstance(data, list):
+        index = 0
         for val in data:
+            print '%s%-4d]' % (indent, index)
             if isinstance(val, dict) or isinstance(val, list): __view__(val, _i + 1)
-            else: print '%s%s' % (indent, str(val))
+            else: print '%s%-4d] %s' % (indent, index, str(val))
+            index += 1
     else: print '%s%s' % (indent, str(data))
     if _i == 1: print ''
 
