@@ -23,8 +23,21 @@ def __delete__(url):
     resp = requests.delete(base_url + url)
     if resp.status_code != 200: resp.raise_for_status()
     return resp.json()
-def __view__(data):
-    print json.dumps(data, indent=2)
+def __view__(data, _i=0):
+    indent = ''
+    for _ in range(0, _i): indent += '  '
+    if isinstance(data, dict):
+        if 'name' in data: print '%sNAME : %s' % (indent, data['name'])
+        if 'id' in data: print '%sID : %d' % (indent, data['id'])
+        for key, val in data.items():
+            if key in ['name', 'id']: continue
+            if isinstance(val, dict) or isinstance(val, list): __view__(val, _i + 1)
+            else: print '%s%s : %s' % (indent, key.upper(), val)
+    elif isinstance(data, list):
+        for val in data:
+            if isinstance(val, dict) or isinstance(val, list): __view__(val, _i + 1)
+            else: print '%s%s' % (indent, val)
+    else: print '%s%s' % (indent, data)
 
 def find(ns, ip): __view__(__get__('/find/%s/%s' % (ns, ip)))
 def status(): __view__(__get__('/status'))
