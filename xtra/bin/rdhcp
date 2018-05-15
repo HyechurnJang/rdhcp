@@ -8,8 +8,17 @@ base_url = 'http://localhost:8080'
 headers = {'Content-Type' : 'application/json', 'Accept' : 'application/json'}
 
 def usages():
-    print 'Usages: rdhcp <RESOURCE> [add | del | set | ARGS...]\n'
-    exit(1)
+    print 'Usages: rdhcp <RESOURCE>'
+    print '    RESOURCE'
+    print '        - status : Total Status of RDHCP'
+    print '        - find <NS> <IP> : Find Host on Namespace'
+    print '        - sync : Sync Status Between RDHCP and System'
+    print '        - ntp [<add | del> <NTP SERVER>] : NTP Control'
+    print '        - interface [set <IP> <MASK>] : Interface Control'
+    print '        - ns [<add | del> <NAME> <INTERFACE> [Args ...]] : NameSpace Control'
+    print '        - host [<add | del> <NAMESPACE> <MAC> <IP> [HOSTNAME]] : Host Control'
+    print ''
+    exit(0)
 
 def __get__(url):
     resp = requests.get(base_url + url)
