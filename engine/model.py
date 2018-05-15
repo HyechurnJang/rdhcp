@@ -196,6 +196,7 @@ class NameSpace(Model):
             dhcp_file += 'dhcp-option=6,%s\n' % (self.dns)
             dhcp_file += 'dhcp-option=42,%s\n' % (self.ntp)
             with open('/opt/rdhcp/%s/dhcp' % self.name, 'w') as fd: fd.write(dhcp_file)
+        if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
         cli('ip netns exec %s /usr/sbin/dnsmasq --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (self.name, self.name, self.name, self.name, self.name, self.name))
         with open('/opt/rdhcp/%s/pid' % self.name, 'r') as fd: self.pid = int(fd.read())
     
