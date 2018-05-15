@@ -1,6 +1,79 @@
 #!/usr/bin/python
 
+import sys
+import json
 import requests
 
+base_url = 'http://localhost:8080'
+
+def usages():
+    print 'Usages: rdhcp <RESOURCE> [add | del | set | ARGS...]\n'
+    exit(1)
+
+def __get__(url):
+    resp = requests.get(url)
+    if resp.status_code != 200: resp.raise_for_status()
+    return resp.json()
+def __post__(url, data):
+    resp = requests.post(url, data=json.dumps(data))
+    if resp.status_code != 200: resp.raise_for_status()
+    return resp.json()
+def __delete__(url):
+    resp = requests.delete(url)
+    if resp.status_code != 200: resp.raise_for_status()
+    return resp.json()
+def __view__(data):
+    print json.dumps(data, indent=2)
+
+def find(ns, ip): __view__(__get__('/find/%s/%s' % (ns, ip)))
+def status(): __view__(__get__('/status'))
+def sync(): __view__(__get__('/sync'))
+def ntp(): __view__(__get__('/ntp'))
+def ntp_add(server): __view__(__post__('/ntp', {'server' : server}))
+def ntp_del(server): __view__(__delete__('/ntp/%s' % server))
+def interface(): __view__(__get__('/interface'))
+def interface_set(intf, ip, mask): __view__(__post__('/interface', {'interface' : intf, 'ip' : ip, 'mask' : mask}))
+def ns(): __view__(__get__('/namespace'))
+def ns_add(name, intf, gw='', dns='', ntp='', stt='', end=''): __view__(__post__('/namespace', {'name' : name, 'interface' : intf, 'gw' : gw, 'dns' : dns, 'ntp' : ntp, 'stt' : stt, 'end' : end}))
+def ns_del(ns): __view__(__delete__('/namespace/%s' % ns))
+def host(): __view__(__get__('/host'))
+def host_add(ns, mac, ip, name=''): __view__(__post__('/host', {'namespace' : ns, 'mac' : mac, 'ip' : ip, 'name' : name}))
+def host_del(h): __view__(__delete__('/host/%s' % h))
+
 if __name__ == '__main__':
-    print 'OK'
+    argv = sys.argv[1:]
+    print argv
+    if not argv: usages()
+    r = argv[0]
+    if r == 'find': find(*argv[1:])
+    elif r == 'status': status()
+    elif r == 'sync': sync()
+    elif r == 'ntp':
+        try:
+            c = argv[1].lower()
+            a = argv[2]
+            if c == 'add': ntp_add(a)
+            elif c == 'del': ntp_del(a)
+            else: usages()
+        except: ntp()
+    elif r == 'interface':
+        try:
+            c = argv[1].lower()
+            if c == 'set': interface_set(*argv[2:])
+            else: usages()
+        except: interface()
+    elif r == 'ns':
+        try:
+            c = argv[1].lower()
+            if c == 'add': ns_add(*argv[2:])
+            elif c == 'del': ns_del(*argv[2:])
+            else: usages()
+        except: ns()
+    elif r == 'host':
+        try:
+            c = argv[1].lower()
+            if c == 'add': host_add(*argv[2:])
+            elif c == 'del': host_del(*argv[2:])
+            else: usages()
+        except: host()
+    else: usages()
