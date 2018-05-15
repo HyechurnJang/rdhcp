@@ -157,24 +157,34 @@ class NameSpace(Model):
     
     def __sync__(self):
         dummy_mac = 'aa:aa:aa' + self.if_mac[9:]
+        route_ip = '192.254.254.%d' % self.if_id
         cli('ip netns add %s' % self.name)
         cli('ip netns exec %s ifconfig lo up' % self.name)
         cli('ip link set %s netns %s' % (self.if_name, self.name))
         cli('ip netns exec %s ifconfig %s %s netmask %s up' % (self.name, self.if_name, self.if_ip, self.mask))
         
+        cli('ip link add rve-%s type veth peer name rve-%s netns %s' % (self.name, self.name, self.name))
+        cli('ifconfig rve-%s 0.0.0.0 up' % self.name)
+        cli('ip netns exec %s ifconfig rve-%s %s netmask 255.255.255.0 up' % (self.name, self.name, route_ip))
+        cli('route add -host %s/32 dev rve-%s' % (route_ip, self.name))
+        cli('ip netns exec %s route add -net 0.0.0.0/0 dev rve-%s' % (self.name, self.name))
+        cli('iptables -A FORWARD -i rve-%s -j ACCEPT' % self.name)
+        cli('ip netns exec %s iptables -A FORWARD -j ACCEPT' % self.name)
+        cli('ip netns exec %s iptables -t nat -A POSTROUTING -o rve-%s -j MASQUERADE' % (self.name, self.name))
+        
 #         cli('brctl addbr %s' % self.name) # BR
 #         cli('ovs-vsctl add-br %s' % self.name) # OVS
 #         cli('ifconfig %s up' % self.name)
-#         cli('ip link add v%s type veth peer name v%s netns %s' % (self.name, self.name, self.name))
-#         cli('ifconfig v%s 0.0.0.0 up' % self.name)
+#         cli('ip link add rve-%s type veth peer name rve-%s netns %s' % (self.name, self.name, self.name))
+#         cli('ifconfig rve-%s 0.0.0.0 up' % self.name)
 #         cli('ip netns exec %s ifconfig lo up' % self.name)
 #         cli('ifconfig %s 0.0.0.0 up' % self.if_name)
 #         cli('ifconfig %s hw ether %s' % (self.if_name, dummy_mac))
-#         cli('ip netns exec %s ifconfig v%s %s netmask %s up' % (self.name, self.name, self.if_ip, self.mask))
-#         cli('ip netns exec %s ifconfig v%s hw ether %s' % (self.name, self.name, self.if_mac))
-#         cli('brctl addif %s v%s' % (self.name, self.name)) # BR
+#         cli('ip netns exec %s ifconfig rve-%s %s netmask %s up' % (self.name, self.name, self.if_ip, self.mask))
+#         cli('ip netns exec %s ifconfig rve-%s hw ether %s' % (self.name, self.name, self.if_mac))
+#         cli('brctl addif %s rve-%s' % (self.name, self.name)) # BR
 #         cli('brctl addif %s %s' % (self.name, self.if_name)) # BR
-#         cli('ovs-vsctl add-port %s v%s' % (self.name, self.name)) # OVS
+#         cli('ovs-vsctl add-port %s rve-%s' % (self.name, self.name)) # OVS
 #         cli('ovs-vsctl add-port %s %s' % (self.name, self.if_name)) # OVS
         
         cli('mkdir -p /opt/rdhcp/%s' % self.name)
@@ -194,9 +204,10 @@ class NameSpace(Model):
         if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
         
         cli('ip netns del %s' % self.name, force=True)
+        cli('iptables -D FORWARD -i rve-%s -j ACCEPT' % self.name, force=True)
         cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
         
-#         cli('ovs-vsctl del-port %s v%s' % (self.name, self.name)) # OVS
+#         cli('ovs-vsctl del-port %s rve-%s' % (self.name, self.name)) # OVS
 #         cli('ovs-vsctl del-port %s %s' % (self.name, self.if_name)) # OVS
 #         cli('ip netns del %s' % self.name, force=True)
 #         cli('ifconfig %s down' % self.name, force=True)

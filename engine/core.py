@@ -42,7 +42,7 @@ class Controller:
         for if_name in if_list:
             intf = Interface.one(Interface.name==if_name)
             if intf: intf.sync()
-            else: Interface(if_name).create()
+            elif not re.search('^rve-.+', if_name): Interface(if_name).create()
         for intf in Interface.list():
             if not intf.ns_id and intf.name not in if_list: intf.delete()
         return [intf.toDict() for intf in Interface.list()]
