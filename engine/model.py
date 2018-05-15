@@ -102,7 +102,7 @@ class Interface(Model):
     
     def createNameSpace(self, ns_name, range='', gw='', dns='', ntp=''):
         if self.ns_id: raise Exception('interface assigned to namespace')
-        if self.ip == '0.0.0.0': raise Exception('ip of interface is not assigned')
+        if self.ip == '0.0.0.0': raise Exception('interface ip is not assigned')
         if not gw: gw = self.ip
         if not dns: dns = self.ip
         if not ntp: ntp = os.environ.get('RDHCP_IF_MGMT_IP')
