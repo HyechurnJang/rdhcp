@@ -6,7 +6,8 @@ Created on 2018. 3. 30.
 
 import os
 import re
-from netifaces import interfaces
+from ipaddress import ip_network
+from netifaces import interfaces, ifaddresses, AF_INET, AF_LINK
 from .model import Interface, NameSpace, Host
 
 DEBUG = False
@@ -15,7 +16,6 @@ class Controller:
     
     def __init__(self):
         os.system('mkdir -p /opt/rdhcp')
-        self.if_mgmt = os.environ.get('RDHCP_IF_MGMT', '')
         self.syncInterfaces()
         self.syncNameSpace()
     
@@ -33,7 +33,22 @@ class Controller:
     def syncInterfaces(self):
         if_list = interfaces()
         if_list.remove('lo')
-        try: if_list.remove(self.if_mgmt)
+        try:
+            if_mgmt_name = os.environ.get('RDHCP_IF_MGMT', '')
+            if_mgmt_addrs = ifaddresses(self.name)
+            if_mgmt_ip_0 = if_mgmt_addrs[AF_INET][0]
+            if_mgmt_ip = if_mgmt_ip_0['addr']
+            if_mgmt_mask = if_mgmt_ip_0['netmask']
+            network = ip_network(unicode('%s/%s' % (self.ip, self.mask)), strict=False)
+            if_mgmt_net = str(network.network_address)
+            if_mgmt_prefix = str(network.prefixlen)
+            if_mgmt_cidr = '%s/%s' % (if_mgmt_ip, if_mgmt_prefix)
+            os.environ['RDHCP_IF_MGMT_IP'] = if_mgmt_ip
+            os.environ['RDHCP_IF_MGMT_MASK'] = if_mgmt_mask
+            os.environ['RDHCP_IF_MGMT_NET'] = if_mgmt_net
+            os.environ['RDHCP_IF_MGMT_CIDR'] = if_mgmt_cidr
+            os.environ['RDHCP_IF_MGMT_PREFIX'] = if_mgmt_prefix
+            if_list.remove(if_mgmt_name)
         except: pass
         try: if_list.remove('docker0')
         except: pass
