@@ -32,9 +32,6 @@ class Controller:
     #===========================================================================
     def syncInterfaces(self):
         if_list = interfaces()
-        
-        print if_list
-        
         if_list.remove('lo')
         try: if_list.remove(self.if_mgmt)
         except: pass
