@@ -282,7 +282,7 @@ class Host(Model):
             with open('/opt/rdhcp/%s/hosts' % ns.name, 'w') as fd: fd.write(hosts_file)
         cli('sed -i "/%s/d" /opt/rdhcp/%s/lease' % (self.mac, ns.name), force=True)
         if ns.pid: cli('ip netns exec %s kill -9 %d' % (ns.name, ns.pid), force=True)
-        cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (ns.name, ns.name, ns.name, ns.name, ns.name, ns.name))
+        cli('ip netns exec %s /usr/sbin/dnsmasq --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (ns.name, ns.name, ns.name, ns.name, ns.name, ns.name))
         with open('/opt/rdhcp/%s/pid' % ns.name, 'r') as fd:
             ns.pid = int(fd.read())
             ns.update()
@@ -306,7 +306,7 @@ class Host(Model):
             with open('/opt/rdhcp/%s/hosts' % ns.name, 'w') as fd: fd.write(hosts_file)
         cli('sed -i "/%s/d" /opt/rdhcp/%s/lease' % (self.mac, ns.name), force=True)
         if ns.pid: cli('ip netns exec %s kill -9 %d' % (ns.name, ns.pid), force=True)
-        cli('ip netns exec %s /usr/sbin/dnsmasq --no-resolv --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (ns.name, ns.name, ns.name, ns.name, ns.name, ns.name))
+        cli('ip netns exec %s /usr/sbin/dnsmasq --no-poll --no-hosts --log-facility=/opt/rdhcp/%s/log --dhcp-leasefile=/opt/rdhcp/%s/lease --pid-file=/opt/rdhcp/%s/pid --conf-file=/opt/rdhcp/%s/dhcp --addn-hosts=/opt/rdhcp/%s/hosts' % (ns.name, ns.name, ns.name, ns.name, ns.name, ns.name))
         with open('/opt/rdhcp/%s/pid' % ns.name, 'r') as fd:
             ns.pid = int(fd.read())
             ns.update()
