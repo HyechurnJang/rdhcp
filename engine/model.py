@@ -105,7 +105,8 @@ class Interface(Model):
         if self.ip == '0.0.0.0': raise Exception('interface ip is not assigned')
         if not gw: gw = self.ip
         if not dns: dns = self.ip
-        if not ntp: ntp = os.environ.get('RDHCP_IF_MGMT_IP')
+        # if not ntp: ntp = os.environ.get('RDHCP_IF_MGMT_IP')
+        if not ntp: ntp = self.ip
         ns = NameSpace(self, ns_name, range, gw, dns, ntp).create()
         self.ns_id = ns.id
         self.ns_name = ns.name
