@@ -51,6 +51,8 @@ systemctl enable tftpd-hpa && systemctl restart tftpd-hpa
 echo "3. Copy rdhcp Binary"
 cp xtra/bin/rdhcp /usr/bin/rdhcp
 chmod 755 /usr/bin/rdhcp
+cp xtra/bin/sh.rdhcp /usr/bin/sh.rdhcp
+chmod 755 /usr/bin/sh.rdhcp
 echo ""
 
 echo "Database Initialization"
