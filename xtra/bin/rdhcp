@@ -97,6 +97,9 @@ if __name__ == '__main__':
     elif r == 'sync':
         try: sync()
         except Exception as e: print str(e)
+    elif r == 'shell':
+        try: shell(*argv[1:])
+        except Exception as e: print str(e)
     elif r == 'interface':
         try: c = argv[1].lower()
         except:
