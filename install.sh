@@ -30,7 +30,7 @@ http {
     server {
         listen         80;
         location / {
-            alias /opt/data;
+            alias /opt/data/;
         }
         error_page     500 502 503 504 /50x.html;
         location = /50x.html {
