@@ -108,7 +108,7 @@ restrict source notrap nomodify noquery
         for if_name in if_list:
             intf = Interface.one(Interface.name==if_name)
             if intf: intf.sync()
-            elif not re.search('^rve_.+', if_name): Interface(if_name).create()
+            elif not re.search('^nsve\d+', if_name): Interface(if_name).create()
         for intf in Interface.list():
             if not intf.ns_id and intf.name not in if_list: intf.delete()
         return [intf.toDict() for intf in Interface.list()]
@@ -148,7 +148,6 @@ restrict source notrap nomodify noquery
         return ns.toDict()
     
     def createNameSpace(self, name, if_p, stt='', end='', gw='', dns='', ntp=''):
-        if not re.search('^[a-zA-Z][\w\d]*$', name): raise Exception('name is consist of alphabet, number and _ and be started with alphabet')
         if stt and end:
             if not self.checkIPFormat(stt): raise Exception('invalid stt string')
             if not self.checkIPFormat(end): raise Exception('invalid end string')
