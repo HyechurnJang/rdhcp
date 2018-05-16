@@ -175,6 +175,7 @@ class NameSpace(Model):
     def __sync__(self):
         dummy_mac = 'aa:aa:aa' + self.if_mac[9:]
         route_ip = '192.254.254.%d' % self.if_id
+        mgmt_ip = os.environ.get('RDHCP_IF_MGMT_IP')
         cli('ip netns add %s' % self.name)
         cli('ip netns exec %s ifconfig lo up' % self.name)
         cli('ip link set %s netns %s' % (self.if_name, self.name))
@@ -184,9 +185,14 @@ class NameSpace(Model):
         cli('ip netns exec %s ifconfig rve-%s %s netmask 255.255.255.0 up' % (self.name, self.name, route_ip))
         cli('route add -host %s/32 dev rve-%s' % (route_ip, self.name))
         cli('iptables -A FORWARD -i rve-%s -j ACCEPT' % self.name)
-        cli('ip netns exec %s route add -host %s/32 dev rve-%s' % (self.name, os.environ.get('RDHCP_IF_MGMT_IP'), self.name))
-        cli('ip netns exec %s route add default gw %s' % (self.name, os.environ.get('RDHCP_IF_MGMT_IP')))
+        cli('ip netns exec %s route add -host %s/32 dev rve-%s' % (self.name, mgmt_ip, self.name))
+        cli('ip netns exec %s route add default gw %s' % (self.name, mgmt_ip))
         cli('ip netns exec %s iptables -A FORWARD -i %s -j ACCEPT' % (self.name, self.if_name))
+        cli('ip netns exec %s iptables -A PREROUTING -i %s -p udp -m udp --dport 69 -j DNAT --to-destination %s:69' % (self.name, self.if_name, mgmt_ip))
+        cli('ip netns exec %s iptables -A PREROUTING -i %s -p udp -m udp --dport 123 -j DNAT --to-destination %s:123' % (self.name, self.if_name, mgmt_ip))
+        cli('ip netns exec %s iptables -A PREROUTING -i %s -p tcp -m tcp --dport 20 -j DNAT --to-destination %s:20' % (self.name, self.if_name, mgmt_ip))
+        cli('ip netns exec %s iptables -A PREROUTING -i %s -p tcp -m tcp --dport 21 -j DNAT --to-destination %s:21' % (self.name, self.if_name, mgmt_ip))
+        cli('ip netns exec %s iptables -A PREROUTING -i %s -p tcp -m tcp --dport 80 -j DNAT --to-destination %s:80' % (self.name, self.if_name, mgmt_ip))
         cli('ip netns exec %s iptables -t nat -A POSTROUTING -o rve-%s -j MASQUERADE' % (self.name, self.name))
         cli('mkdir -p /opt/rdhcp/%s' % self.name)
         if not os.path.exists('/opt/rdhcp/%s/hosts' % self.name):
