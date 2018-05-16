@@ -5,6 +5,7 @@ Created on 2018. 3. 30.
 '''
 
 import os
+import pygics
 from sql import *
 from ipaddress import ip_network
 from netifaces import ifaddresses, AF_INET, AF_LINK
@@ -205,9 +206,10 @@ class NameSpace(Model):
         if self.pid: cli('ip netns exec %s kill -9 %d' % (self.name, self.pid), force=True)
         cli('ip link del rve-%s' % self.name, force=True)
         cli('ip netns del %s' % self.name, force=True)
-        cli('iptables -D FORWARD -i rve-%s -j ACCEPT' % self.name, force=True)
-        cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
         cli('rm -rf /opt/rdhcp/%s' % self.name, force=True)
+        cli('iptables -D FORWARD -i rve-%s -j ACCEPT' % self.name, force=True)
+        pygics.sleep(1)
+        cli('ifconfig %s %s netmask %s up' % (self.if_name, self.if_ip, self.mask), force=True)
     
     def sync(self):
         try: self.__sync__()
