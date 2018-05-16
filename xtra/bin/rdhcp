@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import os
 import sys
 import json
 import requests
@@ -8,15 +9,28 @@ base_url = 'http://localhost:8080'
 headers = {'Content-Type' : 'application/json', 'Accept' : 'application/json'}
 
 def usages():
-    print 'Usages: rdhcp <RESOURCE>'
-    print '    RESOURCE'
-    print '        - status : Total Status of RDHCP'
-    print '        - find <NS> <IP> : Find Host on Namespace'
-    print '        - sync : Sync Status Between RDHCP and System'
-    print '        - ntp [<add | del> <NTP SERVER>] : NTP Control'
-    print '        - interface [set <NAME> <IP> <MASK>] : Interface Control'
-    print '        - ns [<add | del> <NAME> <INTERFACE> [<GW> <DNS> <NTP>] : NameSpace Control'
-    print '        - host [<add | del> <NAMESPACE> <MAC> <IP> [HOSTNAME]] : Host Control'
+    print 'Usages: rdhcp <COMMAND>'
+    print '  COMMAND'
+    print '    - status : Total Status of RDHCP'
+    print '    - sync : Sync Status Between RDHCP and System'
+    print '    - shell <NameSpaceName> : Execute NameSpace Console'
+    print '    - find <NameSpaceNameOrID> <IP> : Find Host on NameSpace'
+    print '    - interface : Interface Control'
+    print '        SubCommand'
+    print '          set <InterfaceName> <IP> <NetMask> : Set Interface IP & Mask'
+    print '    - ntp : NTP Control'
+    print '        SubCommand'
+    print '          add <NTPServer> : Add NTP Server'
+    print '          del <NTPServer> : Delete NTP Server'
+    print '    - ns : NameSpace Control'
+    print '        SubCommand'
+    print '          add <NameSpaceName> <InterfaceName> [OptionParams...] : Add NameSpace'
+    print '            OptionParams : <Gateway> <DNS> <NTP> <DHCPStartIP> <DHCPEndIP>'
+    print '          del <NameSpaceNameOrID> : Delete NameSpace'
+    print '    - host : Host Control'
+    print '        SubCommand'
+    print '          add <NameSpaceNameOrID> <Mac> <IP> [HostName] : Add Host'
+    print '          del <MacOrID> : Delete Host'
     print ''
     exit(0)
 
@@ -57,11 +71,12 @@ def __view__(data, _i=1):
 def find(ns, ip): __view__(__get__('/find/%s/%s' % (ns, ip)))
 def status(): __view__(__get__('/status'))
 def sync(): __view__(__get__('/sync'))
+def shell(ns): os.system('/usr/bin/sh.rdhcp %s' % ns)
+def interface(): __view__(__get__('/interface'))
+def interface_set(intf, ip, mask): __view__(__post__('/interface', {'interface' : intf, 'ip' : ip, 'mask' : mask}))
 def ntp(): __view__(__get__('/ntp'))
 def ntp_add(server): __view__(__post__('/ntp', {'server' : server}))
 def ntp_del(server): __view__(__delete__('/ntp/%s' % server))
-def interface(): __view__(__get__('/interface'))
-def interface_set(intf, ip, mask): __view__(__post__('/interface', {'interface' : intf, 'ip' : ip, 'mask' : mask}))
 def ns(): __view__(__get__('/namespace'))
 def ns_add(name, intf, gw='', dns='', ntp='', stt='', end=''): __view__(__post__('/namespace', {'name' : name, 'interface' : intf, 'gw' : gw, 'dns' : dns, 'ntp' : ntp, 'stt' : stt, 'end' : end}))
 def ns_del(ns): __view__(__delete__('/namespace/%s' % ns))
@@ -73,34 +88,56 @@ if __name__ == '__main__':
     argv = sys.argv[1:]
     if not argv: usages()
     r = argv[0]
-    if r == 'find': find(*argv[1:])
-    elif r == 'status': status()
-    elif r == 'sync': sync()
-    elif r == 'ntp':
-        try:
-            c = argv[1].lower()
-            if c == 'add': ntp_add(*argv[2:])
-            elif c == 'del': ntp_del(*argv[2:])
-            else: usages()
-        except: ntp()
+    if r == 'find':
+        try: find(*argv[1:])
+        except Exception as e: print str(e)
+    elif r == 'status':
+        try: status()
+        except Exception as e: print str(e)
+    elif r == 'sync':
+        try: sync()
+        except Exception as e: print str(e)
     elif r == 'interface':
-        try:
-            c = argv[1].lower()
-            if c == 'set': interface_set(*argv[2:])
-            else: usages()
-        except: interface()
+        try: c = argv[1].lower()
+        except:
+            try: interface()
+            except Exception as e: print str(e)
+        else:
+            try:
+                if c == 'set': interface_set(*argv[2:])
+                else: usages()
+            except Exception as e: print str(e)
+    elif r == 'ntp':
+        try: c = argv[1].lower()
+        except:
+            try: ntp()
+            except Exception as e: print str(e)
+        else:
+            try:
+                if c == 'add': ntp_add(*argv[2:])
+                elif c == 'del': ntp_del(*argv[2:])
+                else: usages()
+            except Exception as e: print str(e)
     elif r == 'ns':
-        try:
-            c = argv[1].lower()
-            if c == 'add': ns_add(*argv[2:])
-            elif c == 'del': ns_del(*argv[2:])
-            else: usages()
-        except: ns()
+        try: c = argv[1].lower()
+        except:
+            try: ns()
+            except Exception as e: print str(e)
+        else:
+            try:
+                if c == 'add': ns_add(*argv[2:])
+                elif c == 'del': ns_del(*argv[2:])
+                else: usages()
+            except Exception as e: print str(e)
     elif r == 'host':
-        try:
-            c = argv[1].lower()
-            if c == 'add': host_add(*argv[2:])
-            elif c == 'del': host_del(*argv[2:])
-            else: usages()
-        except: host()
+        try: c = argv[1].lower()
+        except:
+            try: host()
+            except Exception as e: print str(e)
+        else:
+            try:
+                if c == 'add': host_add(*argv[2:])
+                elif c == 'del': host_del(*argv[2:])
+                else: usages()
+            except Exception as e: print str(e)
     else: usages()
