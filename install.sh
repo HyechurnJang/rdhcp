@@ -9,7 +9,7 @@ echo ""
 echo "System Setting"
 mkdir -p /opt/data
 echo "1. Enable Routing"
-sed -i -e "s/#net.ipv4.ip_forward=1/net.ipv4.ip_forward/g" /etc/sysctl.conf
+sed -i -e "s/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g" /etc/sysctl.conf
 sysctl -p
 echo "2. Service Init"
 echo "2.1. Dnsmasq"
